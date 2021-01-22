@@ -5,9 +5,15 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 # SYNOPSIS
 
     use Text::CSV qw(csv);
-    use Data::Prepare qw(chop_lines);
+    use Data::Prepare qw(
+      cols_non_empty
+      chop_lines
+    );
     my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
     chop_lines(\@lines, $data); # mutates the data
+
+    # or:
+    my @non_empty_counts = cols_non_empty($data);
 
 # DESCRIPTION
 
@@ -25,6 +31,14 @@ All the `$data` inputs are an array-ref-of-array-refs.
 
 Uses `splice` to delete each zero-based line index, in the order
 given. The example above deletes the first, and last `$n`, lines.
+
+## cols\_non\_empty
+
+    my @col_non_empty = cols_non_empty($data);
+
+In the given data, iterates through all rows and returns a list of
+quantities of non-blank entries in each column. This can be useful to spot
+columns with only a couple of entries, which are more usefully chopped.
 
 # SEE ALSO
 

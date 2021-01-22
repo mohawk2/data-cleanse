@@ -5,11 +5,24 @@ use warnings;
 use Exporter 'import';
 
 our $VERSION = '0.001';
-our @EXPORT_OK = qw(chop_lines);
+our @EXPORT_OK = qw(
+  cols_non_empty
+  chop_lines
+);
 
 sub chop_lines {
   my ($choplines, $data) = @_;
   splice @$data, $_, 1 for @$choplines;
+}
+
+sub cols_non_empty {
+  my ($data) = @_;
+  my @col_non_empty;
+  for my $line (@$data) {
+    $col_non_empty[$_] ||= 0 for 0..$#$line;
+    $col_non_empty[$_]++ for grep length $line->[$_], 0..$#$line;
+  }
+  @col_non_empty;
 }
 
 1;
@@ -23,9 +36,15 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 =head1 SYNOPSIS
 
   use Text::CSV qw(csv);
-  use Data::Prepare qw(chop_lines);
+  use Data::Prepare qw(
+    cols_non_empty
+    chop_lines
+  );
   my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
   chop_lines(\@lines, $data); # mutates the data
+
+  # or:
+  my @non_empty_counts = cols_non_empty($data);
 
 =head1 DESCRIPTION
 
@@ -43,6 +62,14 @@ All the C<$data> inputs are an array-ref-of-array-refs.
 
 Uses C<splice> to delete each zero-based line index, in the order
 given. The example above deletes the first, and last C<$n>, lines.
+
+=head2 cols_non_empty
+
+  my @col_non_empty = cols_non_empty($data);
+
+In the given data, iterates through all rows and returns a list of
+quantities of non-blank entries in each column. This can be useful to spot
+columns with only a couple of entries, which are more usefully chopped.
 
 =head1 SEE ALSO
 
