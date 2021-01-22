@@ -5,7 +5,7 @@ use Test::Snapshot;
 use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty
-  chop_lines
+  chop_lines chop_cols
 );
 
 my $data = data("CoreHouseholdIndicators");
@@ -19,6 +19,9 @@ is_deeply $got, [
   121, 0, 0, 0, 199, 13, 0, 86, 198, 8,
   116, 198, 0, 57,
 ] or diag explain $got;
+
+chop_cols([0, 2, 4, 7, 10, 13, 16, 19, 21, 22, 23, 25, 26, 29, 32], $data);
+is_deeply_snapshot $data, 'chop_cols';
 
 done_testing;
 

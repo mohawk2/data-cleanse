@@ -8,11 +8,19 @@ our $VERSION = '0.001';
 our @EXPORT_OK = qw(
   cols_non_empty
   chop_lines
+  chop_cols
 );
 
 sub chop_lines {
   my ($choplines, $data) = @_;
   splice @$data, $_, 1 for @$choplines;
+}
+
+sub chop_cols {
+  my ($chopcols, $data) = @_;
+  for my $c (sort {$b <=> $a} @$chopcols) {
+    splice @$_, $c, 1 for @$data;
+  }
 }
 
 sub cols_non_empty {
@@ -38,10 +46,11 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
   use Text::CSV qw(csv);
   use Data::Prepare qw(
     cols_non_empty
-    chop_lines
+    chop_lines chop_cols
   );
   my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
   chop_lines(\@lines, $data); # mutates the data
+  chop_cols([0, 2], $data);
 
   # or:
   my @non_empty_counts = cols_non_empty($data);
@@ -55,6 +64,13 @@ All the functions are exportable, none are exported by default.
 All the C<$data> inputs are an array-ref-of-array-refs.
 
 =head1 FUNCTIONS
+
+=head2 chop_cols
+
+  chop_cols([0, 2], $data);
+
+Uses C<splice> to delete each zero-based column index. The example above
+deletes the first and third columns.
 
 =head2 chop_lines
 

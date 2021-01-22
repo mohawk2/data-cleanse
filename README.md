@@ -5,6 +5,7 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 # SYNOPSIS
 
     use Text::CSV qw(csv);
+<<<<<<< HEAD
     use Data::Prepare qw(
       cols_non_empty
       chop_lines
@@ -14,6 +15,31 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 
     # or:
     my @non_empty_counts = cols_non_empty($data);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    use Data::Prepare qw(chop_lines);
+    my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
+    chop_lines(\@lines, $data); # mutates the data
+=======
+    use Data::Cleanse qw(read_spec cleanse analyse cols_non_empty chop_lines);
+    my $spec = read_spec('cleanse.yml');
+=======
+    use Data::Cleanse qw(chop_cols chop_lines cols_non_empty);
+>>>>>>> c1d998c... chop_cols
+    my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
+    chop_cols([0, 2], $data);
+    chop_lines([0, -1, -1], $data);
+
+    # or:
+<<<<<<< HEAD
+    my @errors = analyse($data);
+    die @errors if @errors;
+>>>>>>> 4755954... cols_non_empty
+=======
+    my @cols_non_empty = cols_non_empty($data);
+>>>>>>> c1d998c... chop_cols
+>>>>>>> da4df19... chop_cols
 
 # DESCRIPTION
 
@@ -24,6 +50,13 @@ All the functions are exportable, none are exported by default.
 All the `$data` inputs are an array-ref-of-array-refs.
 
 # FUNCTIONS
+
+## chop\_cols
+
+    chop_cols([0, 2], $data);
+
+Uses `splice` to delete each zero-based column index. The example above
+deletes the first and third columns.
 
 ## chop\_lines
 
