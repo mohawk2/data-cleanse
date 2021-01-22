@@ -7,6 +7,7 @@ use Exporter 'import';
 our $VERSION = '0.001';
 our @EXPORT_OK = qw(
   cols_non_empty
+  non_unique_cols
   chop_lines
   chop_cols
 );
@@ -33,6 +34,14 @@ sub cols_non_empty {
   @col_non_empty;
 }
 
+sub non_unique_cols {
+  my ($data) = @_;
+  my ($line, %col2count) = $data->[0];
+  $col2count{$_}++ for @$line;
+  delete @col2count{ grep $col2count{$_} == 1, keys %col2count };
+  \%col2count;
+}
+
 1;
 
 =encoding utf8
@@ -45,7 +54,7 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 
   use Text::CSV qw(csv);
   use Data::Prepare qw(
-    cols_non_empty
+    cols_non_empty non_unique_cols
     chop_lines chop_cols
   );
   my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
@@ -54,6 +63,7 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 
   # or:
   my @non_empty_counts = cols_non_empty($data);
+  print Dumper(non_unique_cols($data));
 
 =head1 DESCRIPTION
 
@@ -86,6 +96,13 @@ given. The example above deletes the first, and last C<$n>, lines.
 In the given data, iterates through all rows and returns a list of
 quantities of non-blank entries in each column. This can be useful to spot
 columns with only a couple of entries, which are more usefully chopped.
+
+=head2 non_unique_cols
+
+  my $col2count = non_unique_cols($data);
+
+Takes the first row of the given data, and returns a hash-ref mapping
+any non-unique column-names to the number of times they appear.
 
 =head1 SEE ALSO
 

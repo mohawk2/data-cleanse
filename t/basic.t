@@ -4,7 +4,7 @@ use Test::More;
 use Test::Snapshot;
 use Text::CSV qw(csv);
 use Data::Prepare qw(
-  cols_non_empty
+  cols_non_empty non_unique_cols
   chop_lines chop_cols
 );
 
@@ -22,6 +22,9 @@ is_deeply $got, [
 
 chop_cols([0, 2, 4, 7, 10, 13, 16, 19, 21, 22, 23, 25, 26, 29, 32], $data);
 is_deeply_snapshot $data, 'chop_cols';
+
+$got = non_unique_cols([[qw(a b b)]]);
+is_deeply $got, { b => 2 };
 
 done_testing;
 

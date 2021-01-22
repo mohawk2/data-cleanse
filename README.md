@@ -5,41 +5,17 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
 # SYNOPSIS
 
     use Text::CSV qw(csv);
-<<<<<<< HEAD
     use Data::Prepare qw(
-      cols_non_empty
-      chop_lines
+      cols_non_empty non_unique_cols
+      chop_lines chop_cols
     );
     my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
     chop_lines(\@lines, $data); # mutates the data
+    chop_cols([0, 2], $data);
 
     # or:
     my @non_empty_counts = cols_non_empty($data);
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-    use Data::Prepare qw(chop_lines);
-    my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
-    chop_lines(\@lines, $data); # mutates the data
-=======
-    use Data::Cleanse qw(read_spec cleanse analyse cols_non_empty chop_lines);
-    my $spec = read_spec('cleanse.yml');
-=======
-    use Data::Cleanse qw(chop_cols chop_lines cols_non_empty);
->>>>>>> c1d998c... chop_cols
-    my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
-    chop_cols([0, 2], $data);
-    chop_lines([0, -1, -1], $data);
-
-    # or:
-<<<<<<< HEAD
-    my @errors = analyse($data);
-    die @errors if @errors;
->>>>>>> 4755954... cols_non_empty
-=======
-    my @cols_non_empty = cols_non_empty($data);
->>>>>>> c1d998c... chop_cols
->>>>>>> da4df19... chop_cols
+    print Dumper(non_unique_cols($data));
 
 # DESCRIPTION
 
@@ -72,6 +48,13 @@ given. The example above deletes the first, and last `$n`, lines.
 In the given data, iterates through all rows and returns a list of
 quantities of non-blank entries in each column. This can be useful to spot
 columns with only a couple of entries, which are more usefully chopped.
+
+## non\_unique\_cols
+
+    my $col2count = non_unique_cols($data);
+
+Takes the first row of the given data, and returns a hash-ref mapping
+any non-unique column-names to the number of times they appear.
 
 # SEE ALSO
 
