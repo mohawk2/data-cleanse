@@ -10,6 +10,7 @@ our @EXPORT_OK = qw(
   non_unique_cols
   chop_lines
   chop_cols
+  header_merge
 );
 
 sub chop_lines {
@@ -21,6 +22,42 @@ sub chop_cols {
   my ($chopcols, $data) = @_;
   for my $c (sort {$b <=> $a} @$chopcols) {
     splice @$_, $c, 1 for @$data;
+  }
+}
+
+my %where2offset = (up => -1, self => 0, down => 1);
+sub header_merge {
+  my ($merge_spec, $data) = @_;
+  for my $spec (@$merge_spec) {
+    my ($do, $l, $matchfrom, $matchto) = @$spec{qw(do line matchfrom matchto)};
+    my ($from_row, $to_row) = map $data->[$l + $where2offset{$spec->{$_}}], qw(from to);
+    my ($kept, $fromspec, $justone, $which_index) = ('', ($spec->{fromspec} || ''));
+    if (($spec->{tospec} || '') =~ /^index:(\d+)/) {
+      $justone = 1;
+      $which_index = $1;
+    }
+    for my $i (0..$#$to_row) {
+      $kept = $from_row->[$i] || $kept;
+      next if defined $matchto and $to_row->[$i] !~ /$matchto/;
+      next if defined $matchfrom and $from_row->[$i] !~ /$matchfrom/;
+      my $basic_from =
+        $fromspec eq 'lastnonblank' ? $kept :
+        $fromspec eq 'left' ? $from_row->[$i - 1] :
+        $fromspec =~ /^literal:(.*)/ ? $1 :
+        $from_row->[$justone ? $which_index : $i];
+      my $basic_to = $to_row->[$justone ? $which_index : $i];
+      my $what =
+        $do->[0] eq 'overwrite' ? $basic_from :
+        $do->[0] eq 'prepend' ? $basic_from . $do->[1] . $basic_to :
+        $do->[0] eq 'append' ? $basic_to . $do->[1] . $basic_from :
+        die "Unknown action '$do->[0]'";
+      if ($justone) {
+        $to_row->[$which_index] = $what;
+        last;
+      } else {
+        $to_row->[$i] = $what;
+      }
+    }
   }
 }
 
@@ -55,11 +92,12 @@ Data::Prepare - prepare CSV (etc) data for automatic processing
   use Text::CSV qw(csv);
   use Data::Prepare qw(
     cols_non_empty non_unique_cols
-    chop_lines chop_cols
+    chop_lines chop_cols header_merge
   );
   my $data = csv(in => 'unclean.csv', encoding => "UTF-8");
-  chop_lines(\@lines, $data); # mutates the data
   chop_cols([0, 2], $data);
+  header_merge($spec, $data);
+  chop_lines(\@lines, $data); # mutates the data
 
   # or:
   my @non_empty_counts = cols_non_empty($data);
@@ -88,6 +126,34 @@ deletes the first and third columns.
 
 Uses C<splice> to delete each zero-based line index, in the order
 given. The example above deletes the first, and last C<$n>, lines.
+
+=head2 header_merge
+
+  header_merge([
+    { line => 1, from => 'up', fromspec => 'lastnonblank', to => 'self', matchto => 'HH', do => [ 'overwrite' ] },
+    { line => 1, from => 'self', matchfrom => '.', to => 'down', do => [ 'prepend', ' ' ] },
+    { line => 2, from => 'self', fromspec => 'left', to => 'self', matchto => 'Year', do => [ 'prepend', '/' ] },
+    { line => 2, from => 'self', fromspec => 'literal:Country', to => 'self', tospec => 'index:0', do => [ 'overwrite' ] },
+  ], $data);
+  # Turns:
+  # [
+  #   [ '', 'Proportion of households with', '', '', '' ],
+  #   [ '', '(HH1)', 'Year', '(HH2)', 'Year' ],
+  #   [ '', 'Radio', 'of data', 'TV', 'of data' ],
+  # ]
+  # into (after a further chop_lines to remove the first two):
+  # [
+  #   [
+  #     'Country',
+  #     'Proportion of households with Radio', 'Proportion of households with Radio/Year of data',
+  #     'Proportion of households with TV', 'Proportion of households with TV/Year of data'
+  #   ]
+  # ]
+
+Applies the given transformations to the given data, so you can make the
+given data have the first row be your desired headers for the columns.
+As shown in the above example, this does not delete lines so further
+operations may be needed.
 
 =head2 cols_non_empty
 

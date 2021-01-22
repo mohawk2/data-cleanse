@@ -7,3 +7,4 @@ t/00-report-prereqs.t
 t/basic.t
 t/snapshots/basic_t/chop_cols
 t/snapshots/basic_t/chop_lines
+t/snapshots/basic_t/header_merge
