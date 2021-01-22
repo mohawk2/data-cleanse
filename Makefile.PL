@@ -20,6 +20,7 @@ WriteMakefile(
   },
   PREREQ_PM => {
     'Exporter' => '5.57', # importable 'import'
+    'Text::CSV' => '2.00',
   },
   META_MERGE => {
     "meta-spec" => { version => 2 },
