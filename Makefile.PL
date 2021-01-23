@@ -21,7 +21,9 @@ WriteMakefile(
   PREREQ_PM => {
     'Exporter' => '5.57', # importable 'import'
     'Text::CSV' => '2.00',
+    'YAML' => '1.30',
   },
+  EXE_FILES => [ glob 'scripts/*' ],
   META_MERGE => {
     "meta-spec" => { version => 2 },
     dynamic_config => 0,
