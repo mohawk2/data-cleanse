@@ -10,11 +10,12 @@ use Data::Prepare qw(
 use YAML qw(LoadFile);
 use Getopt::Long qw(GetOptions);
 
-my ($config, $analyse, $uniq_cols, $verbose) = "data-prepare-conf.yml";
+my ($config, $analyse, $uniq_cols, $verbose, $slice) = "data-prepare-conf.yml";
 if (!GetOptions("a!" => \$analyse,
                 "u!"  => \$uniq_cols,
                 "v!"  => \$verbose,
                 "f=s" => \$config,
+                "s=i" => \$slice,
                )) {
     require Pod::Usage;
     Pod::Usage::pod2usage(1);
@@ -46,6 +47,16 @@ if ($analyse) {
   require Data::Dumper;
   $Data::Dumper::Indent = $Data::Dumper::Indent = $Data::Dumper::Sortkeys = $Data::Dumper::Sortkeys = $Data::Dumper::Terse = $Data::Dumper::Terse = 1;
   print Data::Dumper::Dumper(\%f2cs);
+  exit;
+}
+
+if (defined $slice) {
+  die "Usage: -s colnum file..." unless @ARGV;
+  require Encode;
+  for my $file (@ARGV) {
+    my $data = csv(in => $file, encoding => "UTF-8");
+    print Encode::encode("UTF-8", $_->[54]), "\n" for @$data;
+  }
   exit;
 }
 
@@ -85,7 +96,7 @@ data-prepare - prepare CSV data for automatic processing
 
 =head1 SYNOPSIS
 
-    data-prepare [-f config] [-v] [[-u|-a] file...]
+    data-prepare [-f config] [-v] [[-u|-a|-s colnum] file...]
 
 =head1 DESCRIPTION
 
@@ -95,7 +106,7 @@ It will first delete columns specified in C<chop_cols>, then do the
 C<merge> operations, then the C<chop_lines> operations (in that order
 so that all lines are available for C<merge> purposes).
 
-If the C<-u> or C<-a> flags are given, the config file is not read and
+If the flags that take files are given, the config file is not read and
 no operations executed.
 
 B<Please note this program overwrites the data files> with updated data.
@@ -114,6 +125,16 @@ column values in the first row ("column headers"), with the number of
 times they occur. Use this to see if further merge/modify operations
 are needed on column headers in order to achieve uniquely-named columns.
 
+=item -a F<file...>
+
+Print for each file, a sequence of numbers. Each number is the count of
+non-blank entries in that column (from left to right). This helps you
+spot columns with few or no entries that you may wish to "chop".
+
+=item -s colnum F<file...>
+
+Print for each file, the zero-based-number-th column ("slice") from that file.
+
 =item -v
 
 Turn on verbose mode.
@@ -122,12 +143,6 @@ Turn on verbose mode.
 
 Use the given YAML-formatted config file rather than the default of
 F<data-prepare-conf.yml>. See below for format.
-
-=item -a F<file...>
-
-Print for each file, a sequence of numbers. Each number is the count of
-non-blank entries in that column (from left to right). This helps you
-spot columns with few or no entries that you may wish to "chop".
 
 =back
 
