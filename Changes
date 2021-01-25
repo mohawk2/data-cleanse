@@ -1,5 +1,6 @@
 - key_to_index
 - fix the -s* docs as well
+- make_pk_map
 
 0.002 2020-01-25
 - add -sk flag, fix -sn
