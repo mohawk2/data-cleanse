@@ -10,12 +10,14 @@ use Data::Prepare qw(
 use YAML qw(LoadFile);
 use Getopt::Long qw(GetOptions);
 
-my ($config, $analyse, $uniq_cols, $verbose, $slice) = "data-prepare-conf.yml";
+my $config = "data-prepare-conf.yml";
+my ($analyse, $uniq_cols, $verbose, $slice_num, $slice_key);
 if (!GetOptions("a!" => \$analyse,
                 "u!"  => \$uniq_cols,
                 "v!"  => \$verbose,
                 "f=s" => \$config,
-                "s=i" => \$slice,
+                "sn=i" => \$slice_num,
+                "sk=s" => \$slice_key,
                )) {
     require Pod::Usage;
     Pod::Usage::pod2usage(1);
@@ -50,12 +52,16 @@ if ($analyse) {
   exit;
 }
 
-if (defined $slice) {
-  die "Usage: -s colnum file..." unless @ARGV;
+if (grep defined, $slice_num, $slice_key) {
+  die "Usage: -s[kn] col[num|key] file..." unless @ARGV;
   require Encode;
   for my $file (@ARGV) {
     my $data = csv(in => $file, encoding => "UTF-8");
-    print Encode::encode("UTF-8", $_->[54]), "\n" for @$data;
+    if (!defined $slice_num) {
+      ($slice_num) = grep $data->[0][$_] eq $slice_key, 0..$#{$data->[0]};
+      die "Unknown column-name '$slice_key' in '$file'" if !defined $slice_num;
+    }
+    print Encode::encode("UTF-8", $_->[$slice_num]), "\n" for @$data;
   }
   exit;
 }
@@ -96,7 +102,7 @@ data-prepare - prepare CSV data for automatic processing
 
 =head1 SYNOPSIS
 
-    data-prepare [-f config] [-v] [[-u|-a|-s colnum] file...]
+    data-prepare [-f config] [-v] [[-u|-a|-sn colnum|-sk key] file...]
 
 =head1 DESCRIPTION
 
