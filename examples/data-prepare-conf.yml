@@ -36,3 +36,12 @@ merge:
         line: 3
         to: self
         tospec: index:0
+pk_spec:
+  file: examples/country-codes.csv
+  primary_key: ISO3166-1-Alpha-3
+  alt_keys:
+    - ISO3166-1-Alpha-2
+    - UNTERM English Short
+    - UNTERM English Formal
+    - official_name_en
+    - CLDR display name

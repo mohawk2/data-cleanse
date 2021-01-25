@@ -10,6 +10,7 @@ our @EXPORT_OK = qw(
   non_unique_cols
   key_to_index
   make_pk_map
+  pk_col_counts
   chop_lines
   chop_cols
   header_merge
@@ -102,6 +103,23 @@ sub make_pk_map {
     }
   }
   \%altcol2value2pk;
+}
+
+sub pk_col_counts {
+  my ($data, $pk_map) = @_;
+  my $k2i = key_to_index($data->[0]);
+  my (%col2code2exact, @no_exact_match);
+  for my $i (1..$#$data) {
+    my ($row, $exact_match) = $data->[$i];
+    for my $possible_col (keys %$k2i) {
+      my $val = $row->[ $k2i->{$possible_col} ];
+      my @match_codes_yes = grep exists $pk_map->{$_}{$val}, keys %$pk_map;
+      $col2code2exact{$possible_col}{$_}++ for @match_codes_yes;
+      $exact_match ||= @match_codes_yes;
+    }
+    push @no_exact_match, $row if !$exact_match;
+  }
+  (\%col2code2exact, \@no_exact_match);
 }
 
 1;
@@ -271,6 +289,16 @@ Given C<$data>, the heading of the primary-key column, and an array-ref
 of headings of alternative key columns, returns a hash-ref mapping each
 of those alternative key columns (plus the C<$pk_colkey>) to a map from
 that column's value to the relevant row's primary-key value.
+
+=head2 pk_col_counts
+
+  my ($colname2potential_key2count, $no_exact_match) = pk_col_counts($data, $pk_map);
+
+Given C<$data> and a primary-key (etc) map created by the above, returns
+a tuple of a hash-ref mapping each column that gave any matches to a
+further hash-ref mapping each of the potential key columns given above
+to how many matches it gave, and an array-ref of rows that had no exact
+matches.
 
 =head1 SEE ALSO
 

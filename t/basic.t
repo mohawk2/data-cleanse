@@ -5,7 +5,7 @@ use Test::Snapshot;
 use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty non_unique_cols
-  make_pk_map
+  make_pk_map pk_col_counts
   chop_lines chop_cols header_merge
 );
 
@@ -71,6 +71,8 @@ my @alt_keys = (
 my $pk_data = data('country-codes');
 my $pk_map = make_pk_map($pk_data, 'ISO3166-1-Alpha-3', \@alt_keys);
 is_deeply_snapshot $pk_map, 'make_pk_map';
+
+is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
 
 done_testing;
 

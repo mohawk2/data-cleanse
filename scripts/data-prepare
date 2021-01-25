@@ -6,19 +6,21 @@ use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty non_unique_cols
   key_to_index
+  make_pk_map pk_col_counts
   chop_lines chop_cols header_merge
 );
 use YAML qw(LoadFile);
 use Getopt::Long qw(GetOptions);
 
 my $config = "data-prepare-conf.yml";
-my ($analyse, $uniq_cols, $verbose, $slice_num, $slice_key);
+my ($analyse, $uniq_cols, $verbose, $slice_num, $slice_key, $key_analyse);
 if (!GetOptions("a!" => \$analyse,
                 "u!"  => \$uniq_cols,
                 "v!"  => \$verbose,
                 "f=s" => \$config,
                 "sn=i" => \$slice_num,
                 "sk=s" => \$slice_key,
+                "k!" => \$key_analyse,
                )) {
     require Pod::Usage;
     Pod::Usage::pod2usage(1);
@@ -47,10 +49,14 @@ if ($analyse) {
     my $data = csv(in => $file, encoding => "UTF-8");
     $f2cs{$file} = [ cols_non_empty($data) ];
   }
+  print _dump(\%f2cs);
+  exit;
+}
+
+sub _dump {
   require Data::Dumper;
   $Data::Dumper::Indent = $Data::Dumper::Indent = $Data::Dumper::Sortkeys = $Data::Dumper::Sortkeys = $Data::Dumper::Terse = $Data::Dumper::Terse = 1;
-  print Data::Dumper::Dumper(\%f2cs);
-  exit;
+  Data::Dumper::Dumper($_[0]);
 }
 
 if (grep defined, $slice_num, $slice_key) {
@@ -68,6 +74,19 @@ if (grep defined, $slice_num, $slice_key) {
 }
 
 my $process_config = LoadFile($config);
+
+if ($key_analyse) {
+  die "Usage: -k file..." unless @ARGV;
+  my $pk_map = make_pk_map(
+    csv(in => $process_config->{pk_spec}{file}, encoding => "UTF-8"),
+    @{ $process_config->{pk_spec} }{ qw(primary_key alt_keys) },
+  );
+  for my $file (@ARGV) {
+    my $data = csv(in => $file, encoding => "UTF-8");
+    print "$file: ", _dump([ pk_col_counts($data, $pk_map) ]);
+  }
+  exit;
+}
 
 my %set_to_process; @set_to_process{
   (map @{ $_->{files} }, @{$process_config->{merge}}),
@@ -103,7 +122,7 @@ data-prepare - prepare CSV data for automatic processing
 
 =head1 SYNOPSIS
 
-    data-prepare [-f config] [-v] [[-u|-a|-sn colnum|-sk key] file...]
+    data-prepare [-f config] [-v] [[-u|-a|-k|-sn colnum|-sk key] file...]
 
 =head1 DESCRIPTION
 
@@ -153,6 +172,16 @@ Turn on verbose mode.
 Use the given YAML-formatted config file rather than the default of
 F<data-prepare-conf.yml>. See below for format.
 
+=item -k F<file...>
+
+Requires a config file with a C<pk_spec> key giving keys C<file>,
+C<primary_key>, and an array C<alt_keys>.
+
+Print for each file, a data structure mapping each column that gave any
+matches to a further hash-ref mapping each of the potential key columns
+to how many matches it gave. This is to help you select the best main
+C<primary_key> to specify for that file.
+
 =back
 
 =head1 CONFIGURATION FILE FORMAT
@@ -199,6 +228,15 @@ directory):
           line: 3
           to: self
           tospec: index:0
+  pk_spec:
+    file: examples/country-codes.csv
+    primary_key: ISO3166-1-Alpha-3
+    alt_keys:
+      - ISO3166-1-Alpha-2
+      - UNTERM English Short
+      - UNTERM English Formal
+      - official_name_en
+      - CLDR display name
 
 This turns the first three lines of CSV excerpted from the supplied example
 data (spaces inserted for alignment reasons only):
