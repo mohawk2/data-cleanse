@@ -138,9 +138,11 @@ Print for each file, a sequence of numbers. Each number is the count of
 non-blank entries in that column (from left to right). This helps you
 spot columns with few or no entries that you may wish to "chop".
 
-=item -s colnum F<file...>
+=item -s[kn] col F<file...>
 
-Print for each file, the zero-based-number-th column ("slice") from that file.
+Print for each file, either the zero-based-number-th column ("slice")
+from that file, or in the C<-sk> form, it gets the number using
+L<Data::Prepare/key_to_index>.
 
 =item -v
 
