@@ -8,6 +8,7 @@ our $VERSION = '0.002';
 our @EXPORT_OK = qw(
   cols_non_empty
   non_unique_cols
+  key_to_index
   chop_lines
   chop_cols
   header_merge
@@ -77,6 +78,11 @@ sub non_unique_cols {
   $col2count{$_}++ for @$line;
   delete @col2count{ grep $col2count{$_} == 1, keys %col2count };
   \%col2count;
+}
+
+sub key_to_index {
+  my ($row) = @_;
+  +{ map +($row->[$_] => $_), 0..$#$row };
 }
 
 1;
@@ -231,6 +237,12 @@ columns with only a couple of entries, which are more usefully chopped.
 
 Takes the first row of the given data, and returns a hash-ref mapping
 any non-unique column-names to the number of times they appear.
+
+=head2 key_to_index
+
+Given an array-ref (probably the first row of a CSV file, i.e. column
+headings), returns a hash-ref mapping the cell values to their zero-based
+index.
 
 =head1 SEE ALSO
 

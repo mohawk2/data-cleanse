@@ -147,6 +147,12 @@ columns with only a couple of entries, which are more usefully chopped.
 Takes the first row of the given data, and returns a hash-ref mapping
 any non-unique column-names to the number of times they appear.
 
+## key\_to\_index
+
+Given an array-ref (probably the first row of a CSV file, i.e. column
+headings), returns a hash-ref mapping the cell values to their zero-based
+index.
+
 # SEE ALSO
 
 [Text::CSV](https://metacpan.org/pod/Text%3A%3ACSV)
