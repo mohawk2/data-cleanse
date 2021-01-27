@@ -89,7 +89,7 @@ if ($key_analyse) {
 }
 
 my %set_to_process; @set_to_process{
-  (map @{ $_->{files} }, @{$process_config->{merge}}),
+  (map @{ $_->{files} }, map @{$process_config->{$_}}, qw(merge pk_insert)),
   (map keys(%{$process_config->{$_}}), qw(chop_cols chop_lines)),
 } = ();
 
@@ -110,6 +110,26 @@ for my $file (sort keys %{ $process_config->{chop_lines} }) {
   my $lines = $process_config->{chop_lines}{$file};
   print "$file: lines (@$lines)\n" if $verbose;
   chop_lines($lines, $file2data{$file});
+}
+my $pk_map; $pk_map = make_pk_map(
+  csv(in => $process_config->{pk_spec}{file}, encoding => "UTF-8"),
+  @{ $process_config->{pk_spec} }{ qw(primary_key alt_keys) },
+) if $process_config->{pk_insert};
+for my $pk_set (@{ $process_config->{pk_insert} }) {
+  my ($ch, $lc, $pkc) = (@$pk_set{qw(column_heading local_column pk_column)});
+  for my $file (@{$pk_set->{files}}) {
+    print "$file: pk_insert\n" if $verbose;
+    my $data = $file2data{$file};
+    my $key_index = key_to_index($data->[0])->{$lc};
+    die "undef index in '$file' for key '$lc'" if !defined $key_index;
+    unshift @{ $data->[0] }, $ch;
+    my $exact_map = $pk_map->{$pkc};
+    for my $row (@$data[ 1..$#$data ]) {
+      my $key_val = $row->[ $key_index ];
+      my $pkv = $exact_map->{ $key_val };
+      unshift(@$row, $pkv);
+    }
+  }
 }
 for my $file (sort keys %file2data) {
   print "to $file\n" if $verbose;
