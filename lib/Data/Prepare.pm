@@ -11,6 +11,7 @@ our @EXPORT_OK = qw(
   key_to_index
   make_pk_map
   pk_col_counts
+  pk_match
   chop_lines
   chop_cols
   header_merge
@@ -135,6 +136,32 @@ sub pk_col_counts {
     push @no_exact_match, $row if !$exact_match;
   }
   (\%col2code2exact, \@no_exact_match);
+}
+
+sub _match_register {
+  my ($matches, $code, $this_map, $pk_val2count, $pk_col2pk_value2count) = @_;
+  $pk_val2count->{$_}++,
+    $pk_col2pk_value2count->{$code}{$_}++
+      for map $this_map->{$_}, @$matches;
+}
+
+sub pk_match {
+  my ($value, $pk_map) = @_;
+  my @val_words = grep length, split /[^A-Za-z]/, $value;
+  my $val_pat = join '.*', map +(/[A-Z]{2,}/ ? split //, $_ : $_), @val_words;
+  my (%pk_col2pk_value2count, %pk_val2count);
+  for my $code (keys %$pk_map) {
+    my $this_map = $pk_map->{$code};
+    my @matches = grep /$val_pat/i, keys %$this_map;
+    _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
+  }
+  my ($best) = sort {
+    $pk_val2count{$b} <=> $pk_val2count{$a}
+    ||
+    $a cmp $b
+  } keys %pk_val2count;
+  my @pk_cols_unique_best = sort grep keys %{ $pk_col2pk_value2count{$_} } == 1 && $pk_col2pk_value2count{$_}{$best}, keys %pk_col2pk_value2count;
+  ($best, \@pk_cols_unique_best);
 }
 
 1;
@@ -349,6 +376,31 @@ a tuple of a hash-ref mapping each column that gave any matches to a
 further hash-ref mapping each of the potential key columns given above
 to how many matches it gave, and an array-ref of rows that had no exact
 matches.
+
+=head2 pk_match
+
+  my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map);
+
+Given a value, and a C<$pk_map>,
+returns its best match for the right primary-key value, and an array-ref
+of which primary-key columns in the C<$pk_map> matched the given value
+exactly once.
+
+The latter is useful for analysis purposes to select which primary-key
+column to use for this data-set.
+
+The algorithm used for this best-match:
+
+=over
+
+=item *
+
+Splits the value into words (or where a word is two or more capital
+letters, letters). The search allows any, or no, text, to occur between
+these entities. Each configured primary-key column's keys are searched
+for matches.
+
+=back
 
 =head1 SEE ALSO
 

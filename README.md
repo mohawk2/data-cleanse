@@ -207,6 +207,25 @@ further hash-ref mapping each of the potential key columns given above
 to how many matches it gave, and an array-ref of rows that had no exact
 matches.
 
+## pk\_match
+
+    my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map);
+
+Given a value, and a `$pk_map`,
+returns its best match for the right primary-key value, and an array-ref
+of which primary-key columns in the `$pk_map` matched the given value
+exactly once.
+
+The latter is useful for analysis purposes to select which primary-key
+column to use for this data-set.
+
+The algorithm used for this best-match:
+
+- Splits the value into words (or where a word is two or more capital
+letters, letters). The search allows any, or no, text, to occur between
+these entities. Each configured primary-key column's keys are searched
+for matches.
+
 # SEE ALSO
 
 [Text::CSV](https://metacpan.org/pod/Text%3A%3ACSV)

@@ -16,3 +16,4 @@ t/snapshots/basic_t/header_merge
 t/snapshots/basic_t/make_pk_map
 t/snapshots/basic_t/pk_col_counts
 t/snapshots/basic_t/pk_insert
+t/snapshots/basic_t/pk_match

@@ -5,7 +5,7 @@ use Test::Snapshot;
 use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty non_unique_cols
-  make_pk_map pk_col_counts
+  make_pk_map pk_col_counts key_to_index pk_match
   chop_lines chop_cols header_merge pk_insert
 );
 
@@ -40,6 +40,11 @@ my $pk_map = make_pk_map($pk_data, 'ISO3166-1-Alpha-3', \@alt_keys);
 is_deeply_snapshot $pk_map, 'make_pk_map';
 
 is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
+
+my $key_index = key_to_index($data->[0])->{Country};
+is_deeply_snapshot [
+  map [ $_->[$key_index], pk_match($_->[$key_index], $pk_map) ], @$data[1..$#$data]
+], 'pk_match';
 
 pk_insert({
   column_heading => 'ISO3CODE',
