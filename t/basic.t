@@ -6,7 +6,7 @@ use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty non_unique_cols
   make_pk_map pk_col_counts
-  chop_lines chop_cols header_merge
+  chop_lines chop_cols header_merge pk_insert
 );
 
 my $data = data("CoreHouseholdIndicators");
@@ -40,6 +40,13 @@ my $pk_map = make_pk_map($pk_data, 'ISO3166-1-Alpha-3', \@alt_keys);
 is_deeply_snapshot $pk_map, 'make_pk_map';
 
 is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
+
+pk_insert({
+  column_heading => 'ISO3CODE',
+  local_column => 'Country',
+  pk_column => 'official_name_en',
+}, $data, $pk_map);
+is_deeply_snapshot $data, 'pk_insert';
 
 my $small_data = [
   [ '', 'Proportion of households with', '', '', '' ],

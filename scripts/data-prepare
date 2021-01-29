@@ -7,7 +7,7 @@ use Data::Prepare qw(
   cols_non_empty non_unique_cols
   key_to_index
   make_pk_map pk_col_counts
-  chop_lines chop_cols header_merge
+  chop_lines chop_cols header_merge pk_insert
 );
 use YAML qw(LoadFile);
 use Getopt::Long qw(GetOptions);
@@ -116,19 +116,10 @@ my $pk_map; $pk_map = make_pk_map(
   @{ $process_config->{pk_spec} }{ qw(primary_key alt_keys) },
 ) if $process_config->{pk_insert};
 for my $pk_set (@{ $process_config->{pk_insert} }) {
-  my ($ch, $lc, $pkc) = (@$pk_set{qw(column_heading local_column pk_column)});
+  my ($spec, @files) = ($pk_set->{spec}, @{$pk_set->{files}});
   for my $file (@{$pk_set->{files}}) {
     print "$file: pk_insert\n" if $verbose;
-    my $data = $file2data{$file};
-    my $key_index = key_to_index($data->[0])->{$lc};
-    die "undef index in '$file' for key '$lc'" if !defined $key_index;
-    unshift @{ $data->[0] }, $ch;
-    my $exact_map = $pk_map->{$pkc};
-    for my $row (@$data[ 1..$#$data ]) {
-      my $key_val = $row->[ $key_index ];
-      my $pkv = $exact_map->{ $key_val };
-      unshift(@$row, $pkv);
-    }
+    pk_insert($spec, $file2data{$file}, $pk_map);
   }
 }
 for my $file (sort keys %file2data) {
@@ -207,7 +198,7 @@ C<primary_key> to specify for that file.
 =head1 CONFIGURATION FILE FORMAT
 
 This is in L<YAML> format. An example is given below (included in the
-distribution, together with the applicable CSV file, in the F<examples>
+distribution, together with the applicable CSV files, in the F<examples>
 directory):
 
   ---
@@ -248,6 +239,13 @@ directory):
           line: 3
           to: self
           tospec: index:0
+  pk_insert:
+    - files:
+        - examples/CoreHouseholdIndicators.csv
+      spec:
+        column_heading: ISO3CODE
+        local_column: Country
+        pk_column: official_name_en
   pk_spec:
     file: examples/country-codes.csv
     primary_key: ISO3166-1-Alpha-3
@@ -271,6 +269,7 @@ into the following. Note that the first two lines will still be present
 remove them. The columns of the third line are shown, one per line,
 for readability:
 
+  ISO3CODE,
   Country,
   Proportion of households with Radio,
   Proportion of households with Radio/Year of data,
@@ -278,7 +277,9 @@ for readability:
   Proportion of households with TV/Year of data
 
 This achieves a single row of column-headings, with each column-heading
-being unique, and sufficiently meaningful.
+being unique, and sufficiently meaningful. It also has a column that
+can be used as a globally-unique and meaningful primary key for joining
+data-sets.
 
 =head1 WORKFLOW
 

@@ -132,6 +132,29 @@ for readability:
 This achieves a single row of column-headings, with each column-heading
 being unique, and sufficiently meaningful.
 
+## pk\_insert
+
+    pk_insert({
+      column_heading => 'ISO3CODE',
+      local_column => 'Country',
+      pk_column => 'official_name_en',
+    }, $data, $pk_map);
+
+In YAML format, this is the same configuration:
+
+    pk_insert:
+      - files:
+          - examples/CoreHouseholdIndicators.csv
+        spec:
+          column_heading: ISO3CODE
+          local_column: Country
+          pk_column: official_name_en
+
+And the `$pk_map` made with ["make\_pk\_map"](#make_pk_map), inserts the
+`column_heading` in front of the current zero-th column, mapping the
+value of the `Country` column as looked up from the specified column
+of the `pk_spec` file.
+
 ## cols\_non\_empty
 
     my @col_non_empty = cols_non_empty($data);
@@ -161,6 +184,18 @@ Given `$data`, the heading of the primary-key column, and an array-ref
 of headings of alternative key columns, returns a hash-ref mapping each
 of those alternative key columns (plus the `$pk_colkey`) to a map from
 that column's value to the relevant row's primary-key value.
+
+This is most conveniently represented in YAML format:
+
+    pk_spec:
+      file: examples/country-codes.csv
+      primary_key: ISO3166-1-Alpha-3
+      alt_keys:
+        - ISO3166-1-Alpha-2
+        - UNTERM English Short
+        - UNTERM English Formal
+        - official_name_en
+        - CLDR display name
 
 ## pk\_col\_counts
 

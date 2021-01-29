@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
   chop_lines
   chop_cols
   header_merge
+  pk_insert
 );
 
 sub chop_lines {
@@ -61,6 +62,20 @@ sub header_merge {
         $to_row->[$i] = $what;
       }
     }
+  }
+}
+
+sub pk_insert {
+  my ($spec, $data, $pk_map) = @_;
+  my ($ch, $lc, $pkc) = (@$spec{qw(column_heading local_column pk_column)});
+  my $key_index = key_to_index($data->[0])->{$lc};
+  die "undef index for key '$lc'" if !defined $key_index;
+  unshift @{ $data->[0] }, $ch;
+  my $exact_map = $pk_map->{$pkc};
+  for my $row (@$data[ 1..$#$data ]) {
+    my $key_val = $row->[ $key_index ];
+    my $pkv = $exact_map->{ $key_val };
+    unshift(@$row, $pkv);
   }
 }
 
@@ -260,6 +275,29 @@ for readability:
 This achieves a single row of column-headings, with each column-heading
 being unique, and sufficiently meaningful.
 
+=head2 pk_insert
+
+  pk_insert({
+    column_heading => 'ISO3CODE',
+    local_column => 'Country',
+    pk_column => 'official_name_en',
+  }, $data, $pk_map);
+
+In YAML format, this is the same configuration:
+
+  pk_insert:
+    - files:
+        - examples/CoreHouseholdIndicators.csv
+      spec:
+        column_heading: ISO3CODE
+        local_column: Country
+        pk_column: official_name_en
+
+And the C<$pk_map> made with L</make_pk_map>, inserts the
+C<column_heading> in front of the current zero-th column, mapping the
+value of the C<Country> column as looked up from the specified column
+of the C<pk_spec> file.
+
 =head2 cols_non_empty
 
   my @col_non_empty = cols_non_empty($data);
@@ -289,6 +327,18 @@ Given C<$data>, the heading of the primary-key column, and an array-ref
 of headings of alternative key columns, returns a hash-ref mapping each
 of those alternative key columns (plus the C<$pk_colkey>) to a map from
 that column's value to the relevant row's primary-key value.
+
+This is most conveniently represented in YAML format:
+
+  pk_spec:
+    file: examples/country-codes.csv
+    primary_key: ISO3166-1-Alpha-3
+    alt_keys:
+      - ISO3166-1-Alpha-2
+      - UNTERM English Short
+      - UNTERM English Formal
+      - official_name_en
+      - CLDR display name
 
 =head2 pk_col_counts
 
