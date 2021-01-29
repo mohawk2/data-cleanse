@@ -28,6 +28,19 @@ header_merge($merge_spec, $data);
 chop_lines([0, 0], $data);
 is_deeply_snapshot $data, 'header_merge';
 
+my @alt_keys = (
+  'ISO3166-1-Alpha-2',
+  'UNTERM English Short',
+  'UNTERM English Formal',
+  'official_name_en',
+  'CLDR display name',
+);
+my $pk_data = data('country-codes');
+my $pk_map = make_pk_map($pk_data, 'ISO3166-1-Alpha-3', \@alt_keys);
+is_deeply_snapshot $pk_map, 'make_pk_map';
+
+is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
+
 my $small_data = [
   [ '', 'Proportion of households with', '', '', '' ],
   [ '', '(HH1)', 'Year', '(HH2)', 'Year' ],
@@ -60,19 +73,6 @@ is_deeply $small_data, [
 
 my $got = non_unique_cols([[qw(a b b)]]);
 is_deeply $got, { b => 2 };
-
-my @alt_keys = (
-  'ISO3166-1-Alpha-2',
-  'UNTERM English Short',
-  'UNTERM English Formal',
-  'official_name_en',
-  'CLDR display name',
-);
-my $pk_data = data('country-codes');
-my $pk_map = make_pk_map($pk_data, 'ISO3166-1-Alpha-3', \@alt_keys);
-is_deeply_snapshot $pk_map, 'make_pk_map';
-
-is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
 
 done_testing;
 
