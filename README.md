@@ -209,9 +209,9 @@ matches.
 
 ## pk\_match
 
-    my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map);
+    my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map, $stopwords);
 
-Given a value, and a `$pk_map`,
+Given a value, `$pk_map`, and an array-ref of case-insensitive stopwords,
 returns its best match for the right primary-key value, and an array-ref
 of which primary-key columns in the `$pk_map` matched the given value
 exactly once.
@@ -228,6 +228,9 @@ for matches.
 - If there is a separating `,` or `(` (as commonly used for
 abbreviations), splits the value into chunks, reverses them, and then
 reassembles the chunks as above for a similar search.
+- Only if there were no matches from the previous steps, splits the value
+into words. Words that are shorter than three characters, or that occur in
+the stopword list, are omitted. Then each word is searched for as above.
 - "Votes" on which primary-key value got the most matches. Tie-breaks on
 which primary-key value matched on the shortest key in the relevant
 `$pk_map` column, and then on the lexically lowest-valued primary-key

@@ -42,8 +42,9 @@ is_deeply_snapshot $pk_map, 'make_pk_map';
 is_deeply_snapshot [ pk_col_counts($data, $pk_map) ], 'pk_col_counts';
 
 my $key_index = key_to_index($data->[0])->{Country};
+my @stopwords = qw(islands china northern);
 is_deeply_snapshot [
-  map [ $_->[$key_index], pk_match($_->[$key_index], $pk_map) ], @$data[1..$#$data]
+  map [ $_->[$key_index], pk_match($_->[$key_index], $pk_map, \@stopwords) ], @$data[1..$#$data]
 ], 'pk_match';
 
 pk_insert({

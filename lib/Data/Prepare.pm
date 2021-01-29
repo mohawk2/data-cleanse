@@ -152,9 +152,11 @@ sub _match_register {
 }
 
 sub pk_match {
-  my ($value, $pk_map) = @_;
+  my ($value, $pk_map, $stopwords) = @_;
+  my %stopword; @stopword{@$stopwords} = ();
   my @val_words = grep length, split /[^A-Za-z]/, $value;
   my $val_pat = join '.*', map +(/[A-Z]{2,}/ ? split //, $_ : $_), @val_words;
+  @val_words = grep !exists $stopword{$_}, map lc, grep length > 2, @val_words;
   my (%pk_col2pk_value2count, %pk_val2count, %pk_val2from);
   for my $code (keys %$pk_map) {
     my $this_map = $pk_map->{$code};
@@ -170,6 +172,15 @@ sub pk_match {
       _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
       @matches = grep /^$suff_pref_pat/i, keys %$this_map;
       _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
+    }
+  }
+  if (!keys %pk_col2pk_value2count) {
+    for my $code (keys %$pk_map) {
+      my $this_map = $pk_map->{$code};
+      for my $word (@val_words) {
+        my @matches = grep /\b\Q$word\E\b/i, keys %$this_map;
+        _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count, \%pk_val2from);
+      }
     }
   }
   my ($best) = sort {
@@ -398,9 +409,9 @@ matches.
 
 =head2 pk_match
 
-  my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map);
+  my ($best, $pk_cols_unique_best) = pk_match($value, $pk_map, $stopwords);
 
-Given a value, and a C<$pk_map>,
+Given a value, C<$pk_map>, and an array-ref of case-insensitive stopwords,
 returns its best match for the right primary-key value, and an array-ref
 of which primary-key columns in the C<$pk_map> matched the given value
 exactly once.
@@ -424,6 +435,12 @@ for matches.
 If there is a separating C<,> or C<(> (as commonly used for
 abbreviations), splits the value into chunks, reverses them, and then
 reassembles the chunks as above for a similar search.
+
+=item *
+
+Only if there were no matches from the previous steps, splits the value
+into words. Words that are shorter than three characters, or that occur in
+the stopword list, are omitted. Then each word is searched for as above.
 
 =item *
 

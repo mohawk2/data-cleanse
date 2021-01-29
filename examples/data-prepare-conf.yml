@@ -52,3 +52,7 @@ pk_spec:
     - UNTERM English Formal
     - official_name_en
     - CLDR display name
+  stopwords:
+    - islands
+    - china
+    - northern
