@@ -51,7 +51,8 @@ pk_insert({
   column_heading => 'ISO3CODE',
   local_column => 'Country',
   pk_column => 'official_name_en',
-}, $data, $pk_map);
+  use_fallback => 1,
+}, $data, $pk_map, \@stopwords);
 is_deeply_snapshot $data, 'pk_insert';
 
 my $small_data = [

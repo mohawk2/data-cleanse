@@ -67,8 +67,8 @@ sub header_merge {
 }
 
 sub pk_insert {
-  my ($spec, $data, $pk_map) = @_;
-  my ($ch, $lc, $pkc) = (@$spec{qw(column_heading local_column pk_column)});
+  my ($spec, $data, $pk_map, $stopwords) = @_;
+  my ($ch, $lc, $pkc, $fb) = (@$spec{qw(column_heading local_column pk_column use_fallback)});
   my $key_index = key_to_index($data->[0])->{$lc};
   die "undef index for key '$lc'" if !defined $key_index;
   unshift @{ $data->[0] }, $ch;
@@ -76,6 +76,8 @@ sub pk_insert {
   for my $row (@$data[ 1..$#$data ]) {
     my $key_val = $row->[ $key_index ];
     my $pkv = $exact_map->{ $key_val };
+    unshift(@$row, $pkv), next if defined $pkv or !$fb;
+    ($pkv) = pk_match($key_val, $pk_map, $stopwords);
     unshift(@$row, $pkv);
   }
 }
@@ -338,7 +340,7 @@ being unique, and sufficiently meaningful.
     column_heading => 'ISO3CODE',
     local_column => 'Country',
     pk_column => 'official_name_en',
-  }, $data, $pk_map);
+  }, $data, $pk_map, $stopwords);
 
 In YAML format, this is the same configuration:
 
@@ -349,11 +351,14 @@ In YAML format, this is the same configuration:
         column_heading: ISO3CODE
         local_column: Country
         pk_column: official_name_en
+        use_fallback: true
 
 And the C<$pk_map> made with L</make_pk_map>, inserts the
 C<column_heading> in front of the current zero-th column, mapping the
 value of the C<Country> column as looked up from the specified column
-of the C<pk_spec> file.
+of the C<pk_spec> file, and if C<use_fallback> is true, also tries
+L</pk_match> if no exact match is found. In that case, C<stopwords>
+must be specified in the configuration
 
 =head2 cols_non_empty
 
@@ -396,6 +401,10 @@ This is most conveniently represented in YAML format:
       - UNTERM English Formal
       - official_name_en
       - CLDR display name
+    stopwords:
+      - islands
+      - china
+      - northern
 
 =head2 pk_col_counts
 

@@ -726,7 +726,7 @@
     ''
   ],
   [
-    undef,
+    'CAF',
     'Central African Rep.',
     '...',
     '',
@@ -858,7 +858,7 @@
     ''
   ],
   [
-    undef,
+    'COD',
     'Congo (Rep. of the)',
     '...',
     '',
@@ -990,7 +990,7 @@
     '2019'
   ],
   [
-    undef,
+    'CZE',
     'Czech Republic',
     '...',
     '',
@@ -1012,7 +1012,7 @@
     '2019'
   ],
   [
-    undef,
+    'PRK',
     'Dem. People\'s Rep. of Korea',
     '...',
     '',
@@ -1034,7 +1034,7 @@
     ''
   ],
   [
-    undef,
+    'COD',
     'Dem. Rep. of the Congo',
     '37.6',
     '2017',
@@ -1122,7 +1122,7 @@
     ''
   ],
   [
-    undef,
+    'DOM',
     'Dominican Rep.',
     '51.8',
     '2018',
@@ -1672,7 +1672,7 @@
     ''
   ],
   [
-    undef,
+    'HKG',
     'Hong Kong, China',
     '...',
     '',
@@ -2024,7 +2024,7 @@
     ''
   ],
   [
-    undef,
+    'KOR',
     'Korea (Rep. of)',
     '...',
     '',
@@ -2090,7 +2090,7 @@
     ''
   ],
   [
-    undef,
+    'LAO',
     'Lao P.D.R.',
     '20.6',
     '2017',
@@ -2288,7 +2288,7 @@
     ''
   ],
   [
-    undef,
+    'MAC',
     'Macao, China',
     '...',
     '',
@@ -2530,7 +2530,7 @@
     '2019'
   ],
   [
-    undef,
+    'FSM',
     'Micronesia',
     '...',
     '',
@@ -2552,7 +2552,7 @@
     ''
   ],
   [
-    undef,
+    'MDA',
     'Moldova',
     '...',
     '',
@@ -2750,7 +2750,7 @@
     ''
   ],
   [
-    undef,
+    'NPL',
     'Nepal (Republic of)',
     '29.3',
     '2016',
@@ -2882,7 +2882,7 @@
     '2017'
   ],
   [
-    undef,
+    'MKD',
     'North Macedonia',
     '30.8',
     '2018',
@@ -2970,7 +2970,7 @@
     '2016'
   ],
   [
-    undef,
+    'PSE',
     'Palestine',
     '55.6',
     '2019',
@@ -3806,7 +3806,7 @@
     ''
   ],
   [
-    undef,
+    'TZA',
     'Tanzania',
     '49.1',
     '2017',
@@ -4092,7 +4092,7 @@
     '2019'
   ],
   [
-    undef,
+    'GBR',
     'United Kingdom',
     '...',
     '',
@@ -4114,7 +4114,7 @@
     ''
   ],
   [
-    undef,
+    'USA',
     'United States',
     '...',
     '',
@@ -4202,7 +4202,7 @@
     ''
   ],
   [
-    undef,
+    'VAT',
     'Vatican',
     '...',
     '',
@@ -4224,7 +4224,7 @@
     ''
   ],
   [
-    undef,
+    'VEN',
     'Venezuela',
     '...',
     '',

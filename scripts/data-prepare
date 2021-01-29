@@ -146,7 +146,7 @@ for my $pk_set (@{ $process_config->{pk_insert} }) {
   my ($spec, @files) = ($pk_set->{spec}, @{$pk_set->{files}});
   for my $file (@{$pk_set->{files}}) {
     print "$file: pk_insert\n" if $verbose;
-    pk_insert($spec, $file2data{$file}, $pk_map);
+    pk_insert($spec, $file2data{$file}, $pk_map, $process_config->{pk_spec}{stopwords});
   }
 }
 for my $file (sort keys %file2data) {
@@ -168,7 +168,8 @@ Uses L<Data::Prepare> to process the specified CSV files to make them
 suitable for automatic processing (such as data science applications).
 It will first delete columns specified in C<chop_cols>, then do the
 C<merge> operations, then the C<chop_lines> operations (in that order
-so that all lines are available for C<merge> purposes).
+so that all lines are available for C<merge> purposes). Then primary
+keys are inserted.
 
 If the flags that take files are given, the config file is not read and
 no operations executed.

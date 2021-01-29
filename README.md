@@ -138,7 +138,7 @@ being unique, and sufficiently meaningful.
       column_heading => 'ISO3CODE',
       local_column => 'Country',
       pk_column => 'official_name_en',
-    }, $data, $pk_map);
+    }, $data, $pk_map, $stopwords);
 
 In YAML format, this is the same configuration:
 
@@ -149,11 +149,14 @@ In YAML format, this is the same configuration:
           column_heading: ISO3CODE
           local_column: Country
           pk_column: official_name_en
+          use_fallback: true
 
 And the `$pk_map` made with ["make\_pk\_map"](#make_pk_map), inserts the
 `column_heading` in front of the current zero-th column, mapping the
 value of the `Country` column as looked up from the specified column
-of the `pk_spec` file.
+of the `pk_spec` file, and if `use_fallback` is true, also tries
+["pk\_match"](#pk_match) if no exact match is found. In that case, `stopwords`
+must be specified in the configuration
 
 ## cols\_non\_empty
 
@@ -196,6 +199,10 @@ This is most conveniently represented in YAML format:
         - UNTERM English Formal
         - official_name_en
         - CLDR display name
+      stopwords:
+        - islands
+        - china
+        - northern
 
 ## pk\_col\_counts
 
