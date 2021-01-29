@@ -6,14 +6,14 @@ use Text::CSV qw(csv);
 use Data::Prepare qw(
   cols_non_empty non_unique_cols
   key_to_index
-  make_pk_map pk_col_counts
+  make_pk_map pk_col_counts pk_match
   chop_lines chop_cols header_merge pk_insert
 );
 use YAML qw(LoadFile);
 use Getopt::Long qw(GetOptions);
 
 my $config = "data-prepare-conf.yml";
-my ($analyse, $uniq_cols, $verbose, $slice_num, $slice_key, $key_analyse);
+my ($analyse, $uniq_cols, $verbose, $slice_num, $slice_key, $key_analyse, $pk_analyse);
 if (!GetOptions("a!" => \$analyse,
                 "u!"  => \$uniq_cols,
                 "v!"  => \$verbose,
@@ -21,6 +21,7 @@ if (!GetOptions("a!" => \$analyse,
                 "sn=i" => \$slice_num,
                 "sk=s" => \$slice_key,
                 "k!" => \$key_analyse,
+                "p!" => \$pk_analyse,
                )) {
     require Pod::Usage;
     Pod::Usage::pod2usage(1);
@@ -74,6 +75,32 @@ if (grep defined, $slice_num, $slice_key) {
 }
 
 my $process_config = LoadFile($config);
+
+if ($pk_analyse) {
+  die "Usage: -p file..." unless @ARGV;
+  my $pk_map = make_pk_map(
+    csv(in => $process_config->{pk_spec}{file}, encoding => "UTF-8"),
+    @{ $process_config->{pk_spec} }{ qw(primary_key alt_keys) },
+  );
+  for my $file (@ARGV) {
+    my $data = csv(in => $file, encoding => "UTF-8");
+    my ($col2code2exact, $no_exact_match) = pk_col_counts($data, $pk_map);
+    my $k2i = key_to_index($data->[0]);
+    my (%col2code2approx, @no_approx_match);
+    for my $row (@$no_exact_match) {
+      my $approx_match;
+      for my $possible_col (keys %$col2code2exact) {
+        my ($best, $pk_cols_unique_best) = pk_match($row->[$k2i->{$possible_col}], $pk_map, $process_config->{pk_spec}{stopwords});
+        $col2code2approx{$possible_col}{$_}++ for @$pk_cols_unique_best;
+        $approx_match ||= defined $best;
+      }
+      push @no_approx_match, $row if !$approx_match;
+    }
+    require Data::Dumper;
+    print "$file:\n", Data::Dumper::Dumper([ $col2code2exact, \%col2code2approx, \@no_approx_match ]);
+  }
+  exit;
+}
 
 if ($key_analyse) {
   die "Usage: -k file..." unless @ARGV;
@@ -133,7 +160,7 @@ data-prepare - prepare CSV data for automatic processing
 
 =head1 SYNOPSIS
 
-    data-prepare [-f config] [-v] [[-u|-a|-k|-sn colnum|-sk key] file...]
+    data-prepare [-f config] [-v] [[-u|-a|-k|-p|-sn colnum|-sk key] file...]
 
 =head1 DESCRIPTION
 
@@ -193,6 +220,16 @@ matches to a further hash-ref mapping each of the potential key columns
 to how many matches it gave. This is to help you select the best main
 C<primary_key> to specify for that file.
 
+=item -p F<file...>
+
+Requires a config file with a C<pk_spec> key giving keys C<file>,
+C<primary_key>, and an array C<alt_keys>.
+
+Print for each file, data structures showing which primary-key columns
+gave how many exact matches, which gave approximate matches, and an
+array-ref of rows that gave no matches at all. These files will want to
+have already been "header merged".
+
 =back
 
 =head1 CONFIGURATION FILE FORMAT
@@ -246,6 +283,7 @@ directory):
         column_heading: ISO3CODE
         local_column: Country
         pk_column: official_name_en
+        use_fallback: true
   pk_spec:
     file: examples/country-codes.csv
     primary_key: ISO3166-1-Alpha-3
@@ -255,6 +293,10 @@ directory):
       - UNTERM English Formal
       - official_name_en
       - CLDR display name
+    stopwords:
+      - islands
+      - china
+      - northern
 
 This turns the first three lines of CSV excerpted from the supplied example
 data (spaces inserted for alignment reasons only):
