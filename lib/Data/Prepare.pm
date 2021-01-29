@@ -139,24 +139,32 @@ sub pk_col_counts {
 }
 
 sub _match_register {
-  my ($matches, $code, $this_map, $pk_val2count, $pk_col2pk_value2count) = @_;
+  my ($matches, $code, $this_map, $pk_val2count, $pk_col2pk_value2count, $pk_val2from) = @_;
   $pk_val2count->{$_}++,
     $pk_col2pk_value2count->{$code}{$_}++
       for map $this_map->{$_}, @$matches;
+  for (@$matches) {
+    # track longest matched-value per PK, to tie-break on shortest one
+    my $this_pk_val = $this_map->{$_};
+    $pk_val2from->{$this_pk_val} = $_ if
+      length($pk_val2from->{$this_pk_val}||'') < length;
+  }
 }
 
 sub pk_match {
   my ($value, $pk_map) = @_;
   my @val_words = grep length, split /[^A-Za-z]/, $value;
   my $val_pat = join '.*', map +(/[A-Z]{2,}/ ? split //, $_ : $_), @val_words;
-  my (%pk_col2pk_value2count, %pk_val2count);
+  my (%pk_col2pk_value2count, %pk_val2count, %pk_val2from);
   for my $code (keys %$pk_map) {
     my $this_map = $pk_map->{$code};
     my @matches = grep /$val_pat/i, keys %$this_map;
-    _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
+    _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count, \%pk_val2from);
   }
   my ($best) = sort {
     $pk_val2count{$b} <=> $pk_val2count{$a}
+    ||
+    length($pk_val2from{$a}) <=> length($pk_val2from{$b})
     ||
     $a cmp $b
   } keys %pk_val2count;
@@ -399,6 +407,13 @@ Splits the value into words (or where a word is two or more capital
 letters, letters). The search allows any, or no, text, to occur between
 these entities. Each configured primary-key column's keys are searched
 for matches.
+
+=item *
+
+"Votes" on which primary-key value got the most matches. Tie-breaks on
+which primary-key value matched on the shortest key in the relevant
+C<$pk_map> column, and then on the lexically lowest-valued primary-key
+value, to ensure stable return values.
 
 =back
 

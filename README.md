@@ -225,6 +225,10 @@ The algorithm used for this best-match:
 letters, letters). The search allows any, or no, text, to occur between
 these entities. Each configured primary-key column's keys are searched
 for matches.
+- "Votes" on which primary-key value got the most matches. Tie-breaks on
+which primary-key value matched on the shortest key in the relevant
+`$pk_map` column, and then on the lexically lowest-valued primary-key
+value, to ensure stable return values.
 
 # SEE ALSO
 
