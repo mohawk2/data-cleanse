@@ -161,6 +161,17 @@ sub pk_match {
     my @matches = grep /$val_pat/i, keys %$this_map;
     _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count, \%pk_val2from);
   }
+  if ((my @abbrev_parts = grep length, split /\s*[\(,]\s*/, $value) > 1) {
+    s/(.*?)[^A-Za-z]+(.*?)/$1.*$2/g for @abbrev_parts;
+    my $suff_pref_pat = join '.*', reverse @abbrev_parts;
+    for my $code (keys %$pk_map) {
+      my $this_map = $pk_map->{$code};
+      my @matches = grep /$suff_pref_pat/i, keys %$this_map;
+      _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
+      @matches = grep /^$suff_pref_pat/i, keys %$this_map;
+      _match_register(\@matches, $code, $this_map, \%pk_val2count, \%pk_col2pk_value2count);
+    }
+  }
   my ($best) = sort {
     $pk_val2count{$b} <=> $pk_val2count{$a}
     ||
@@ -407,6 +418,12 @@ Splits the value into words (or where a word is two or more capital
 letters, letters). The search allows any, or no, text, to occur between
 these entities. Each configured primary-key column's keys are searched
 for matches.
+
+=item *
+
+If there is a separating C<,> or C<(> (as commonly used for
+abbreviations), splits the value into chunks, reverses them, and then
+reassembles the chunks as above for a similar search.
 
 =item *
 

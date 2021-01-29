@@ -201,6 +201,7 @@
     'Bolivia (Plurinational State of)',
     'BOL',
     [
+      'UNTERM English Formal',
       'UNTERM English Short',
       'official_name_en'
     ]
@@ -373,8 +374,11 @@
   ],
   [
     'Congo (Rep. of the)',
-    undef,
-    []
+    'COD',
+    [
+      'UNTERM English Short',
+      'official_name_en'
+    ]
   ],
   [
     'Costa Rica',
@@ -718,8 +722,10 @@
   ],
   [
     'Hong Kong, China',
-    undef,
-    []
+    'HKG',
+    [
+      'official_name_en'
+    ]
   ],
   [
     'Hungary',
@@ -763,6 +769,7 @@
     'Iran (Islamic Republic of)',
     'IRN',
     [
+      'UNTERM English Formal',
       'UNTERM English Short',
       'official_name_en'
     ]
@@ -866,7 +873,7 @@
   ],
   [
     'Korea (Rep. of)',
-    undef,
+    'KOR',
     []
   ],
   [
@@ -978,8 +985,10 @@
   ],
   [
     'Macao, China',
-    undef,
-    []
+    'MAC',
+    [
+      'official_name_en'
+    ]
   ],
   [
     'Madagascar',
@@ -1177,8 +1186,10 @@
   ],
   [
     'Nepal (Republic of)',
-    undef,
-    []
+    'NPL',
+    [
+      'UNTERM English Formal'
+    ]
   ],
   [
     'Netherlands',
