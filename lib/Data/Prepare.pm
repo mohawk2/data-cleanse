@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 our @EXPORT_OK = qw(
   cols_non_empty
   non_unique_cols
