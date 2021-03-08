@@ -1,3 +1,4 @@
+0.006 2020-03-08
 - script handle BOM as Text::CSV doesn't
 - script handle no pk_insert
 - chop_cols not try splice past end of array
