@@ -124,7 +124,7 @@ if ($key_analyse) {
 }
 
 my %set_to_process; @set_to_process{
-  (map @{ $_->{files} }, map @{$process_config->{$_}}, qw(merge pk_insert)),
+  (map @{ $_->{files} }, map @{$process_config->{$_} || []}, qw(merge pk_insert)),
   (map keys(%{$process_config->{$_}}), qw(chop_cols chop_lines)),
 } = ();
 

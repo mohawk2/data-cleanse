@@ -1,4 +1,5 @@
 - script handle BOM as Text::CSV doesn't
+- script handle no pk_insert
 
 0.005 2020-02-01
 - work around Text::CSV not checking Text::CSV_XS version like it should
