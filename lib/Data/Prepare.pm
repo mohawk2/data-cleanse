@@ -26,7 +26,7 @@ sub chop_lines {
 sub chop_cols {
   my ($chopcols, $data) = @_;
   for my $c (sort {$b <=> $a} @$chopcols) {
-    splice @$_, $c, 1 for @$data;
+    splice @$_, $c, 1 for grep $#$_ >= $c, @$data;
   }
 }
 
