@@ -18,7 +18,7 @@ if (!GetOptions("a!" => \$analyse,
                 "u!"  => \$uniq_cols,
                 "v!"  => \$verbose,
                 "f=s" => \$config,
-                "sn=i" => \$slice_num,
+                "sn=s" => \$slice_num,
                 "sk=s" => \$slice_key,
                 "k!" => \$key_analyse,
                 "p!" => \$pk_analyse,
@@ -73,11 +73,17 @@ if (grep defined, $slice_num, $slice_key) {
   require Encode;
   for my $file (@ARGV) {
     my $data = read_csv($file);
-    if (!defined $slice_num) {
-      $slice_num = key_to_index($data->[0])->{$slice_key};
-      die "Unknown column-name '$slice_key' in '$file'" if !defined $slice_num;
+    if (defined $slice_num) {
+      $slice_num = csv(in => \$slice_num)->[0];
+    } else {
+      my $slice_keys = csv(in => \$slice_key)->[0];
+      my $k2i = key_to_index($data->[0]);
+      $slice_num = [ map $k2i->{$_}, @$slice_keys ];
+      die "Unknown column-name in '$slice_key' in '$file'" if grep !defined(), @$slice_num;
     }
-    print Encode::encode("UTF-8", $_->[$slice_num]), "\n" for @$data;
+    my $new_data = [ map [ @$_[@$slice_num] ], @$data ];
+    csv(in => $new_data, out => \my $output);
+    print $output;
   }
   exit;
 }
@@ -168,7 +174,7 @@ data-prepare - prepare CSV data for automatic processing
 
 =head1 SYNOPSIS
 
-    data-prepare [-f config] [-v] [[-u|-a|-k|-p|-sn colnum|-sk key] file...]
+    data-prepare [-f config] [-v] [[-u|-a|-k|-p|-sn colnums|-sk keys] file...]
 
 =head1 DESCRIPTION
 
@@ -204,11 +210,12 @@ Print for each file, a sequence of numbers. Each number is the count of
 non-blank entries in that column (from left to right). This helps you
 spot columns with few or no entries that you may wish to "chop".
 
-=item -s[kn] col F<file...>
+=item -s[kn] cols F<file...>
 
 Print for each file, either the zero-based-number-th column ("slice")
 from that file, or in the C<-sk> form, it gets the number using
-L<Data::Prepare/key_to_index>.
+L<Data::Prepare/key_to_index>. Both the numeric and key forms may
+have multiple values, in CSV format.
 
 =item -v
 

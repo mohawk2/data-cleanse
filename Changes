@@ -1,3 +1,5 @@
+- script -sk/-sn can have multiple comma-separated values
+
 0.006 2020-03-08
 - script handle BOM as Text::CSV doesn't
 - script handle no pk_insert
